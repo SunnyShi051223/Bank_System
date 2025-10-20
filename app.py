@@ -24,7 +24,8 @@ class BankSystem:
                 print("2. 取款")
                 print("3. 查询余额")
                 print("4. 账户管理")
-                print("5. 退出登录")
+                print("5. 用户信息管理")
+                print("6. 退出登录")
                 print("0. 退出系统")
             else:
                 print("1. 用户注册")
@@ -61,6 +62,8 @@ class BankSystem:
         elif choice == "4":
             self.account_management()
         elif choice == "5":
+            self.user_info_management()
+        elif choice == "6":
             self.logout()
         elif choice == "0":
             print("感谢使用银行卡管理系统，再见！")
@@ -138,6 +141,67 @@ class BankSystem:
         success, message, balance = self.transaction_service.check_balance(self.current_user)
         print(message)
         print(f"当前余额: {balance}")
+
+    def user_info_management(self):
+        """用户信息管理"""
+        while True:
+            print("\n--- 用户信息管理 ---")
+            print("1. 查看个人信息")
+            print("2. 修改密码")
+            print("0. 返回上级菜单")
+            
+            choice = input("请选择操作: ").strip()
+            
+            if choice == "1":
+                self.view_user_info()
+                break
+            elif choice == "2":
+                self.change_password()
+                break
+            elif choice == "0":
+                break
+            else:
+                print("无效选择，请重新输入！")
+
+    def view_user_info(self):
+        """查看个人信息"""
+        print("\n--- 个人信息 ---")
+        print(f"用户名: {self.current_user.username}")
+        print(f"账户状态: {'正常' if not self.current_user.is_frozen else '已冻结'}")
+        print(f"账户余额: {self.current_user.balance}")
+        print(f"注册时间: {self.current_user.created_at}")
+        if self.current_user.is_lost:
+            print("账户状态: 已挂失")
+
+    def change_password(self):
+        """修改密码"""
+        print("\n--- 修改密码 ---")
+        old_password = input("请输入原密码: ").strip()
+        if not old_password:
+            print("密码不能为空！")
+            return
+            
+        # 验证原密码
+        success, message, user = self.user_service.login(
+            self.current_user.username, old_password)
+        if not success:
+            print(f"原密码{message}")
+            return
+            
+        new_password = input("请输入新密码: ").strip()
+        if not new_password:
+            print("新密码不能为空！")
+            return
+            
+        confirm_password = input("请再次输入新密码: ").strip()
+        if new_password != confirm_password:
+            print("两次输入的密码不一致！")
+            return
+            
+        # 更新密码
+        self.current_user.password = self.user_service._hash_password(new_password)
+        success, message = self.user_service.update_user_info(self.current_user)
+        print(message)
 
     def account_management(self):
         """账户管理"""

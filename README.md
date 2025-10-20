@@ -61,6 +61,13 @@ Bank/
 
 系统使用JSON文件存储用户数据，默认存储在 `data/users.json` 文件中。
 
+## 文档结构
+
+- [README.md](README.md) - 项目说明
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - 项目结构说明
+- [REQUIREMENTS.md](REQUIREMENTS.md) - 系统需求规格说明
+- [VERIFICATION.md](VERIFICATION.md) - 系统功能验证报告
+
 ## 注意事项
 
 - 密码经过SHA256加密存储，保证安全性
