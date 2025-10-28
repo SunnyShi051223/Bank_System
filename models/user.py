@@ -5,7 +5,7 @@ from typing import Optional
 
 class User:
     def __init__(self, user_id: str, username: str, password: str, balance: float = 0.0,
-                 is_frozen: bool = False, is_lost: bool = False):
+                 is_frozen: bool = False, is_lost: bool = False, is_using = False):
         self.user_id = user_id
         self.username = username
         self.password = password
@@ -13,6 +13,7 @@ class User:
         self.is_frozen = is_frozen
         self.is_lost = is_lost
         self.created_at = datetime.now().isoformat()
+        self.is_using = is_using
 
     def to_dict(self) -> dict:
         """将用户对象转换为字典"""
