@@ -11,6 +11,7 @@ class BankSystem:
         self.account_service = AccountService()
         self.transaction_service = TransactionService()
         self.current_user = None
+        self.current_session_token = None
 
     def main_menu(self):
         """主菜单"""
@@ -33,43 +34,22 @@ class BankSystem:
                 print("0. 退出系统")
             
             choice = input("请选择操作: ").strip()
-            
             if self.current_user:
                 self._logged_in_menu(choice)
             else:
                 self._logged_out_menu(choice)
 
-    def _logged_out_menu(self, choice):
-        """未登录状态菜单"""
-        if choice == "1":
-            self.register()
-        elif choice == "2":
-            self.login()
-        elif choice == "0":
-            print("感谢使用银行卡管理系统，再见！")
-            sys.exit(0)
-        else:
-            print("无效选择，请重新输入！")
-
-    def _logged_in_menu(self, choice):
-        """已登录状态菜单"""
-        if choice == "1":
-            self.deposit()
-        elif choice == "2":
-            self.withdraw()
-        elif choice == "3":
-            self.check_balance()
-        elif choice == "4":
-            self.account_management()
-        elif choice == "5":
-            self.user_info_management()
-        elif choice == "6":
-            self.logout()
-        elif choice == "0":
-            print("感谢使用银行卡管理系统，再见！")
-            sys.exit(0)
-        else:
-            print("无效选择，请重新输入！")
+        if not username:
+            print("用户名不能为空！")
+            return
+            
+        password = input("请输入密码: ").strip()
+        if not password:
+            print("密码不能为空！")
+            return
+            
+        success, message = self.user_service.register(username, password)
+        print(message)
 
     def register(self):
         """用户注册"""
@@ -84,8 +64,15 @@ class BankSystem:
             print("密码不能为空！")
             return
             
+        confirm_password = input("请确认密码: ").strip()
+        if password != confirm_password:
+            print("两次输入的密码不一致！")
+            return
+            
         success, message = self.user_service.register(username, password)
         print(message)
+        if success:
+            print("注册成功，请登录！")
 
     def login(self):
         """用户登录"""
@@ -100,16 +87,26 @@ class BankSystem:
             print("密码不能为空！")
             return
             
-        success, message, user = self.user_service.login(username, password)
-        print(message)
-        if success:
+        success, message, user, session_token = self.user_service.login(username, password)
+        if success and user and session_token:
             self.current_user = user
+            self.current_session_token = session_token
+            print(message)
+        else:
+            print(f"登录失败: {message}")
 
     def logout(self):
         """退出登录"""
-        if self.current_user:
-            print(f"用户 {self.current_user.username} 已退出登录")
+        if self.current_user and self.current_session_token:
+            success, message = self.user_service.logout(self.current_user)
+            if success:
+                print(f"{message}，再见，{self.current_user.username}！")
+            else:
+                print(f"登出时出错: {message}")
             self.current_user = None
+            self.current_session_token = None
+        else:
+            print("\n您尚未登录！")
 
     def deposit(self):
         """存款"""
@@ -134,13 +131,30 @@ class BankSystem:
                 print(f"当前余额: {balance}")
         except ValueError:
             print("请输入有效的金额！")
-
     def check_balance(self):
         """查询余额"""
         print("\n--- 查询余额 ---")
         success, message, balance = self.transaction_service.check_balance(self.current_user)
         print(message)
-        print(f"当前余额: {balance}")
+        
+    def view_user_info(self):
+        """查看个人信息"""
+        print("\n--- 个人信息 ---")
+        print(f"用户名: {self.current_user.username}")
+        print(f"用户ID: {self.current_user.user_id}")
+        print(f"账户余额: {self.current_user.balance:.2f}")
+        print(f"注册时间: {self.current_user.created_at}")
+        print(f"最后登录: {self.current_user.last_login}")
+        
+        status = []
+        if self.current_user.is_frozen:
+            status.append("已冻结")
+        if self.current_user.is_lost:
+            status.append("已挂失")
+        if not status:
+            status.append("正常")
+            
+        print(f"账户状态: {", ".join(status)}")
 
     def user_info_management(self):
         """用户信息管理"""
@@ -148,30 +162,62 @@ class BankSystem:
             print("\n--- 用户信息管理 ---")
             print("1. 查看个人信息")
             print("2. 修改密码")
-            print("0. 返回上级菜单")
+            print("0. 返回上一级")
             
             choice = input("请选择操作: ").strip()
             
             if choice == "1":
                 self.view_user_info()
-                break
             elif choice == "2":
                 self.change_password()
-                break
             elif choice == "0":
-                break
+                return  # 返回上一级菜单
             else:
                 print("无效选择，请重新输入！")
 
-    def view_user_info(self):
-        """查看个人信息"""
-        print("\n--- 个人信息 ---")
-        print(f"用户名: {self.current_user.username}")
-        print(f"账户状态: {'正常' if not self.current_user.is_frozen else '已冻结'}")
-        print(f"账户余额: {self.current_user.balance}")
-        print(f"注册时间: {self.current_user.created_at}")
-        if self.current_user.is_lost:
-            print("账户状态: 已挂失")
+    def _logged_out_menu(self, choice):
+        """未登录状态菜单"""
+        if choice == "1":
+            self.register()
+        elif choice == "2":
+            self.login()
+        elif choice == "0":
+            print("感谢使用银行卡管理系统，再见！")
+            sys.exit(0)
+        else:
+            print("无效选择，请重新输入！")
+
+    def _logged_in_menu(self, choice):
+        """已登录状态菜单"""
+        # 验证会话
+        if self.current_user and self.current_session_token:
+            is_valid, user = self.user_service.validate_session(
+                self.current_user.user_id, 
+                self.current_session_token
+            )
+            if not is_valid:
+                print("\n会话已过期，请重新登录")
+                self.current_user = None
+                self.current_session_token = None
+                return
+                
+        if choice == "1":
+            self.deposit()
+        elif choice == "2":
+            self.withdraw()
+        elif choice == "3":
+            self.check_balance()
+        elif choice == "4":
+            self.account_management()
+        elif choice == "5":
+            self.user_info_management()
+        elif choice == "6":
+            self.logout()
+        elif choice == "0":
+            print("感谢使用银行卡管理系统，再见！")
+            sys.exit(0)
+        else:
+            print("无效选择，请重新输入！")
 
     def change_password(self):
         """修改密码"""
@@ -210,23 +256,16 @@ class BankSystem:
             print("1. 挂失账户")
             print("2. 冻结账户")
             print("3. 解冻账户")
-            print("4. 销户")
-            print("0. 返回上级菜单")
+            print("0. 返回上一级")
             
             choice = input("请选择操作: ").strip()
             
             if choice == "1":
                 self.report_loss()
-                break
             elif choice == "2":
                 self.freeze_account()
-                break
             elif choice == "3":
                 self.unfreeze_account()
-                break
-            elif choice == "4":
-                self.close_account()
-                break
             elif choice == "0":
                 break
             else:
@@ -236,7 +275,17 @@ class BankSystem:
         """挂失账户"""
         confirm = input("确定要挂失账户吗？此操作不可逆！(y/N): ").strip().lower()
         if confirm == "y":
-            success, message = self.account_service.report_loss(self.current_user)
+            # 验证会话
+            if self.current_user and self.current_session_token:
+                is_valid, user = self.user_service.validate_session(
+                    self.current_user.user_id, 
+                    self.current_session_token
+                )
+                if not is_valid:
+                    print("\n会话已过期，请重新登录")
+                    self.current_user = None
+                    self.current_session_token = None
+                    return
             print(message)
             if success:
                 self.current_user = None  # 挂失后自动退出登录
