@@ -26,7 +26,6 @@ class BankSystem:
                 print("4. 账户管理")
                 print("5. 用户信息管理")
                 print("6. 退出登录")
-                print("0. 退出系统")
             else:
                 print("1. 用户注册")
                 print("2. 用户登录")
@@ -135,6 +134,8 @@ class BankSystem:
         print("\n--- 查询余额 ---")
         success, message, balance = self.transaction_service.check_balance(self.current_user)
         print(message)
+        if success:
+            print(f"当前余额: {balance}")
         
     def view_user_info(self):
         """查看个人信息"""
@@ -212,9 +213,7 @@ class BankSystem:
             self.user_info_management()
         elif choice == "6":
             self.logout()
-        elif choice == "0":
-            print("感谢使用银行卡管理系统，再见！")
-            sys.exit(0)
+        # 登录后菜单不再提供“0. 退出系统”选项
         else:
             print("无效选择，请重新输入！")
 
