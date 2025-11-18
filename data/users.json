@@ -7,20 +7,20 @@
     "is_frozen": false,
     "is_lost": false,
     "is_using": false,
-    "session_token": null,
-    "last_login": "2025-11-18T14:23:22.118419",
+    "session_token": "2eb58e53c21919d8a490ce4d8997e0bf",
+    "last_login": "2025-11-18T14:27:13.308110",
     "created_at": "2025-10-28T18:55:50.543948"
   },
   {
     "user_id": "fed022e9-1b89-4ebb-939e-472753e2d7ec",
     "username": "test02",
     "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
-    "balance": 0.0,
+    "balance": 100.0,
     "is_frozen": false,
     "is_lost": false,
     "is_using": false,
-    "session_token": "c9142f69740d5c702cbdc5c324295db7",
-    "last_login": "2025-11-18T14:21:25.533210",
+    "session_token": null,
+    "last_login": "2025-11-18T14:28:40.080205",
     "created_at": "2025-10-28T18:57:57.476732"
   }
 ]

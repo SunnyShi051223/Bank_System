@@ -28,37 +28,39 @@ class BankGUI:
         tk.Button(frame, text="退出系统", command=self.root.quit, **btn_style).pack(pady=8)
 
     def login(self):
-        login_win = tk.Toplevel(self.root)
-        login_win.title("用户登录")
-        login_win.geometry("320x200")
-        login_win.configure(bg="#f0f4f8")
-        login_win.grab_set()
-        tk.Label(login_win, text="用户名：", font=("微软雅黑", 12), bg="#f0f4f8").place(x=40, y=40)
-        username_entry = tk.Entry(login_win, font=("微软雅黑", 12), width=18)
-        username_entry.place(x=110, y=40)
-        tk.Label(login_win, text="密码：", font=("微软雅黑", 12), bg="#f0f4f8").place(x=40, y=90)
-        password_entry = tk.Entry(login_win, font=("微软雅黑", 12), width=18, show="*")
-        password_entry.place(x=110, y=90)
+        self.clear_window()
+        frame = tk.Frame(self.root, bg="#f0f4f8")
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(frame, text="用户登录", font=("微软雅黑", 22, "bold"), fg="#2d4059", bg="#f0f4f8").pack(pady=30)
+        form_frame = tk.Frame(frame, bg="#f0f4f8")
+        form_frame.pack(pady=10)
+        tk.Label(form_frame, text="用户名：", font=("微软雅黑", 14), bg="#f0f4f8").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        username_entry = tk.Entry(form_frame, font=("微软雅黑", 14), width=20)
+        username_entry.grid(row=0, column=1, padx=10, pady=10)
+        tk.Label(form_frame, text="密码：", font=("微软雅黑", 14), bg="#f0f4f8").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        password_entry = tk.Entry(form_frame, font=("微软雅黑", 14), width=20, show="*")
+        password_entry.grid(row=1, column=1, padx=10, pady=10)
 
         def do_login():
             username = username_entry.get().strip()
             password = password_entry.get().strip()
             if not username or not password:
-                messagebox.showwarning("提示", "用户名和密码不能为空！", parent=login_win)
+                messagebox.showwarning("提示", "用户名和密码不能为空！")
                 return
             success, message, user, session_token = self.user_service.login(username, password)
             if success:
                 self.current_user = user
                 self.current_session_token = session_token
-                messagebox.showinfo("登录成功", message, parent=login_win)
-                login_win.destroy()
+                messagebox.showinfo("登录成功", message)
                 self.user_menu()
             else:
-                messagebox.showerror("登录失败", message, parent=login_win)
+                messagebox.showerror("登录失败", message)
 
-        btn_style = {"font": ("微软雅黑", 12), "bg": "#30a7e1", "fg": "white", "activebackground": "#1976d2", "activeforeground": "#fff", "relief": "groove", "bd": 2, "width": 10, "height": 1}
-        tk.Button(login_win, text="登录", command=do_login, **btn_style).place(x=60, y=140)
-        tk.Button(login_win, text="取消", command=login_win.destroy, **btn_style).place(x=170, y=140)
+        btn_style = {"font": ("微软雅黑", 13), "bg": "#30a7e1", "fg": "white", "activebackground": "#1976d2", "activeforeground": "#fff", "relief": "groove", "bd": 2, "width": 12, "height": 2}
+        btn_frame = tk.Frame(frame, bg="#f0f4f8")
+        btn_frame.pack(pady=20)
+        tk.Button(btn_frame, text="登录", command=do_login, **btn_style).grid(row=0, column=0, padx=20)
+        tk.Button(btn_frame, text="返回主页", command=self.main_menu, **btn_style).grid(row=0, column=1, padx=20)
 
     def register(self):
         username = simpledialog.askstring("注册", "请输入用户名：")
@@ -91,31 +93,74 @@ class BankGUI:
         tk.Button(frame, text="退出登录", command=self.logout, **btn_style).pack(pady=12)
 
     def deposit(self):
-        amount = simpledialog.askfloat("存款", "请输入存款金额：")
-        if amount is None:
-            return
-        success, message, balance = self.transaction_service.deposit(self.current_user, amount)
-        if success:
-            messagebox.showinfo("存款成功", f"{message}\n当前余额：{balance:.2f}")
-        else:
-            messagebox.showerror("存款失败", message)
+        self.clear_window()
+        frame = tk.Frame(self.root, bg="#f0f4f8")
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(frame, text="存款", font=("微软雅黑", 22, "bold"), fg="#2d4059", bg="#f0f4f8").pack(pady=30)
+        tk.Label(frame, text="请输入存款金额：", font=("微软雅黑", 14), bg="#f0f4f8").pack(pady=10)
+        amount_entry = tk.Entry(frame, font=("微软雅黑", 14), width=20)
+        amount_entry.pack(pady=10)
+        result_label = tk.Label(frame, text="", font=("微软雅黑", 13), fg="#1976d2", bg="#f0f4f8")
+        result_label.pack(pady=10)
+        def do_deposit():
+            try:
+                amount = float(amount_entry.get())
+            except ValueError:
+                result_label.config(text="请输入有效的金额！", fg="red")
+                return
+            success, message, balance = self.transaction_service.deposit(self.current_user, amount)
+            if success:
+                result_label.config(text=f"{message}\n当前余额：{balance:.2f}", fg="#1976d2")
+            else:
+                result_label.config(text=message, fg="red")
+        btn_style = {"font": ("微软雅黑", 13), "bg": "#30a7e1", "fg": "white", "activebackground": "#1976d2", "activeforeground": "#fff", "relief": "groove", "bd": 2, "width": 12, "height": 2}
+        btn_frame = tk.Frame(frame, bg="#f0f4f8")
+        btn_frame.pack(pady=20)
+        tk.Button(btn_frame, text="确认存款", command=do_deposit, **btn_style).grid(row=0, column=0, padx=20)
+        tk.Button(btn_frame, text="返回菜单", command=self.user_menu, **btn_style).grid(row=0, column=1, padx=20)
 
     def withdraw(self):
-        amount = simpledialog.askfloat("取款", "请输入取款金额：")
-        if amount is None:
-            return
-        success, message, balance = self.transaction_service.withdraw(self.current_user, amount)
-        if success:
-            messagebox.showinfo("取款成功", f"{message}\n当前余额：{balance:.2f}")
-        else:
-            messagebox.showerror("取款失败", message)
+        self.clear_window()
+        frame = tk.Frame(self.root, bg="#f0f4f8")
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(frame, text="取款", font=("微软雅黑", 22, "bold"), fg="#2d4059", bg="#f0f4f8").pack(pady=30)
+        tk.Label(frame, text="请输入取款金额：", font=("微软雅黑", 14), bg="#f0f4f8").pack(pady=10)
+        amount_entry = tk.Entry(frame, font=("微软雅黑", 14), width=20)
+        amount_entry.pack(pady=10)
+        result_label = tk.Label(frame, text="", font=("微软雅黑", 13), fg="#1976d2", bg="#f0f4f8")
+        result_label.pack(pady=10)
+        def do_withdraw():
+            try:
+                amount = float(amount_entry.get())
+            except ValueError:
+                result_label.config(text="请输入有效的金额！", fg="red")
+                return
+            success, message, balance = self.transaction_service.withdraw(self.current_user, amount)
+            if success:
+                result_label.config(text=f"{message}\n当前余额：{balance:.2f}", fg="#1976d2")
+            else:
+                result_label.config(text=message, fg="red")
+        btn_style = {"font": ("微软雅黑", 13), "bg": "#30a7e1", "fg": "white", "activebackground": "#1976d2", "activeforeground": "#fff", "relief": "groove", "bd": 2, "width": 12, "height": 2}
+        btn_frame = tk.Frame(frame, bg="#f0f4f8")
+        btn_frame.pack(pady=20)
+        tk.Button(btn_frame, text="确认取款", command=do_withdraw, **btn_style).grid(row=0, column=0, padx=20)
+        tk.Button(btn_frame, text="返回菜单", command=self.user_menu, **btn_style).grid(row=0, column=1, padx=20)
 
     def check_balance(self):
+        self.clear_window()
+        frame = tk.Frame(self.root, bg="#f0f4f8")
+        frame.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(frame, text="查询余额", font=("微软雅黑", 22, "bold"), fg="#2d4059", bg="#f0f4f8").pack(pady=30)
         success, message, balance = self.transaction_service.check_balance(self.current_user)
         if success:
-            messagebox.showinfo("余额", f"{message}\n当前余额：{balance:.2f}")
+            info = f"{message}\n当前余额：{balance:.2f}"
+            fg = "#1976d2"
         else:
-            messagebox.showerror("查询失败", message)
+            info = message
+            fg = "red"
+        tk.Label(frame, text=info, font=("微软雅黑", 15), fg=fg, bg="#f0f4f8").pack(pady=30)
+        btn_style = {"font": ("微软雅黑", 13), "bg": "#30a7e1", "fg": "white", "activebackground": "#1976d2", "activeforeground": "#fff", "relief": "groove", "bd": 2, "width": 12, "height": 2}
+        tk.Button(frame, text="返回菜单", command=self.user_menu, **btn_style).pack(pady=20)
 
     def report_loss(self):
         if messagebox.askyesno("挂失", "确定要挂失账户吗？此操作不可逆！"):

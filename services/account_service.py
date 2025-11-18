@@ -9,6 +9,8 @@ class AccountService:
 
     def report_loss(self, user: User) -> tuple[bool, str]:
         """挂失账户"""
+        if user.is_lost:
+            return False, "账户已挂失"
         user.report_loss()
         if self.data_manager.update_user(user):
             return True, "账户挂失成功"
@@ -24,6 +26,8 @@ class AccountService:
 
     def freeze_account(self, user: User) -> tuple[bool, str]:
         """冻结账户"""
+        if user.is_frozen:
+            return False, "账户已冻结"
         user.freeze_account()
         if self.data_manager.update_user(user):
             return True, "账户冻结成功"
@@ -32,6 +36,8 @@ class AccountService:
 
     def unfreeze_account(self, user: User) -> tuple[bool, str]:
         """解冻账户"""
+        if not user.is_frozen:
+            return False, "账户未冻结"
         user.unfreeze_account()
         if self.data_manager.update_user(user):
             return True, "账户解冻成功"
